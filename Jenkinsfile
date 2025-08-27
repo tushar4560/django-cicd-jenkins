@@ -1,34 +1,49 @@
 pipeline {
-    agent any 
-    
-    stages{
-        stage("Clone Code"){
-            steps {
-                echo "Cloning the code"
-                git url:"https://github.com/chayandeokar/django-notes-app.git", branch: "main"
+    agent { label 'agent' }
+
+    stages {
+
+        stage('Clone Code') {
+            steps { 
+                echo 'Cloning the repository...'
+                git url: 'https://github.com/tushar4560/django-cicd-jenkins.git', branch: 'main'
+                echo 'Code cloned successfully.'
             }
         }
-        stage("Build"){
-            steps {
-                echo "Building the image"
-                sh "docker build -t my-note-app ."
+
+        stage('Build Image') {
+            steps { 
+                echo 'Building Docker image...'
+                sh 'docker build -t notes-app:latest .'
+                echo 'Docker image built successfully.'
             }
         }
-        stage("Push to Docker Hub"){
+
+        stage('Run Tests') {
             steps {
-                echo "Pushing the image to docker hub"
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                sh "docker tag my-note-app ${env.dockerHubUser}/my-note-app:latest"
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker push ${env.dockerHubUser}/my-note-app:latest"
-                }
+                echo 'Running Django tests using CI settings...'
+                sh """
+                    docker run --rm \
+                      -v \$(pwd):/app/backend \
+                      -w /app/backend \
+                      notes-app:latest \
+                      sh -c "python manage.py test --settings=notesapp"
+                   """
+                   echo 'Cleaning up dangling Docker images...'
+                sh """
+                    docker images -f dangling=true -q | xargs -r docker rmi || true
+                   """
+                   echo 'Tests completed.'
             }
         }
-        stage("Deploy"){
+
+        stage('Deploy') {
             steps {
-                echo "Deploying the container"
-                sh "docker-compose down && docker-compose up -d"
-                
+                echo 'Deploying application...'
+                sh """
+                     docker-compose up -d
+                   """
+                echo 'Deployment complete.'
             }
         }
     }
