@@ -40,19 +40,24 @@ Conenct both instance by ssh.
 ```
  Install Java and Jenkins
    ```bash
-        sudo apt install fontconfig openjdk-17-jre -y
+        # Install Java (required by Jenkins)
+sudo apt install -y fontconfig openjdk-17-jre
 
-        sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
-        https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+# Add Jenkins key
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
 
-        sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+# Add Jenkins repository
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+https://pkg.jenkins.io/debian-stable binary/" | \
+  sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 
-        echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
-        https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-      /etc/apt/sources.list.d/jenkins.list > /dev/null
+# Update package list
+sudo apt update
 
-      sudo apt-get update -y
-      sudo apt-get install jenkins -y
+# Install Jenkins
+sudo apt install -y jenkins
+
    ```
 - ### Now, access Jenkins Master on the browser on port 8080 and configure it.
 
